@@ -165,11 +165,8 @@ function createCelebrationAnimation() {
     }, 2000);
 }
 
-// Update countdown every second
-function updateCountdown() {
-    const now = new Date().getTime();
-    const distance = targetDate - now;
-    
+// Function to show countdown end state (reusable for test button)
+function showCountdownEnd() {
     const daysElement = document.getElementById('days');
     const hoursElement = document.getElementById('hours');
     const minutesElement = document.getElementById('minutes');
@@ -178,37 +175,58 @@ function updateCountdown() {
     const countdownContainer = document.querySelector('.countdown-container');
     const countdownText = document.querySelector('.countdown-text');
     const callButton = document.getElementById('callButton');
+    const testButton = document.getElementById('testButton');
+    
+    // Set countdown to 0
+    if (daysElement) daysElement.textContent = '0';
+    if (hoursElement) hoursElement.textContent = '0';
+    if (minutesElement) minutesElement.textContent = '0';
+    if (secondsElement) secondsElement.textContent = '0';
+    
+    // Show final message
+    if (finalMessageElement) {
+        finalMessageElement.textContent = 'Tani është koha ❤️';
+    }
+    
+    // Hide countdown elements
+    if (countdownContainer) {
+        countdownContainer.style.display = 'none';
+    }
+    
+    if (countdownText) {
+        countdownText.style.display = 'none';
+    }
+    
+    // Hide test button
+    if (testButton) {
+        testButton.style.display = 'none';
+    }
+    
+    // Show call button with animation
+    if (callButton) {
+        callButton.style.display = 'block';
+        callButton.style.animation = 'fadeIn 1s ease-in, pulse 2s infinite';
+    }
+    
+    // Start celebration animation
+    createCelebrationAnimation();
+}
+
+// Update countdown every second
+function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
     
     if (distance < 0) {
         // Countdown has ended
-        if (daysElement) daysElement.textContent = '0';
-        if (hoursElement) hoursElement.textContent = '0';
-        if (minutesElement) minutesElement.textContent = '0';
-        if (secondsElement) secondsElement.textContent = '0';
-        
-        if (finalMessageElement) {
-            finalMessageElement.textContent = 'Tani është koha ❤️';
-        }
-        
-        if (countdownContainer) {
-            countdownContainer.style.display = 'none';
-        }
-        
-        if (countdownText) {
-            countdownText.style.display = 'none';
-        }
-        
-        // Show call button with animation
-        if (callButton) {
-            callButton.style.display = 'block';
-            callButton.style.animation = 'fadeIn 1s ease-in, pulse 2s infinite';
-        }
-        
-        // Start celebration animation
-        createCelebrationAnimation();
-        
+        showCountdownEnd();
         return;
     }
+    
+    const daysElement = document.getElementById('days');
+    const hoursElement = document.getElementById('hours');
+    const minutesElement = document.getElementById('minutes');
+    const secondsElement = document.getElementById('seconds');
     
     // Calculate time units
     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -234,6 +252,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (container) {
                 container.innerHTML = '<p style="padding: 40px; color: #999;">Vendosni foton tuaj në assets/us.jpg</p>';
             }
+        });
+    }
+    
+    // Test button functionality
+    const testButton = document.getElementById('testButton');
+    if (testButton) {
+        testButton.addEventListener('click', function() {
+            showCountdownEnd();
         });
     }
     

@@ -73,7 +73,7 @@ function drawHeartFrame(imageOrVideo, canvas, size) {
     ctx.restore();
 }
 
-// Create falling photo and video hearts
+// Create falling photo and video hearts (optimized for performance)
 function createFallingPhotoHearts() {
     // List of images to use - all except us.jpg
     const images = [
@@ -104,9 +104,48 @@ function createFallingPhotoHearts() {
     
     const heartsContainer = document.querySelector('.hearts-background');
     const activeHearts = new Map(); // Track active hearts for video rendering
+    const MAX_CONCURRENT_HEARTS = 8; // Limit concurrent hearts for performance
+    let activeHeartCount = 0;
+    
+    // Single unified animation loop instead of multiple requestAnimationFrame loops
+    let animationFrameId = null;
+    let lastFrameTime = 0;
+    const TARGET_FPS = 30; // Reduce from 60fps to 30fps for better performance
+    const FRAME_INTERVAL = 1000 / TARGET_FPS;
+    
+    function unifiedRenderLoop(currentTime) {
+        if (currentTime - lastFrameTime >= FRAME_INTERVAL) {
+            activeHearts.forEach((heartData, canvas) => {
+                if (heartData.video && heartData.video.readyState >= 2) {
+                    const heart = canvas.closest('.photo-heart');
+                    if (heart && heart.parentNode) {
+                        drawHeartFrame(heartData.video, canvas, heartData.size);
+                    } else {
+                        // Clean up if heart is removed
+                        activeHearts.delete(canvas);
+                        if (heartData.video) {
+                            heartData.video.pause();
+                            heartData.video.remove();
+                        }
+                        activeHeartCount--;
+                    }
+                }
+            });
+            lastFrameTime = currentTime;
+        }
+        animationFrameId = requestAnimationFrame(unifiedRenderLoop);
+    }
+    
+    // Start unified render loop
+    animationFrameId = requestAnimationFrame(unifiedRenderLoop);
     
     // Create falling heart with photo or video
     function createFallingHeart() {
+        // Limit concurrent hearts for performance
+        if (activeHeartCount >= MAX_CONCURRENT_HEARTS) {
+            return;
+        }
+        
         const heart = document.createElement('div');
         heart.className = 'photo-heart';
         
@@ -136,26 +175,20 @@ function createFallingPhotoHearts() {
             video.loop = true;
             video.muted = true;
             video.playsInline = true;
+            video.preload = 'auto';
             video.style.display = 'none';
             
             video.onerror = function() {
                 // If video fails to load, remove the heart
                 activeHearts.delete(canvas);
+                activeHeartCount--;
                 heart.remove();
             };
             
             video.onloadeddata = function() {
-                // Start rendering video frames
-                function renderVideo() {
-                    if (heart.parentNode && video.readyState >= 2) {
-                        drawHeartFrame(video, canvas, size);
-                        requestAnimationFrame(renderVideo);
-                    } else {
-                        activeHearts.delete(canvas);
-                    }
-                }
-                activeHearts.set(canvas, { video, renderVideo });
-                renderVideo();
+                // Store video data for unified render loop
+                activeHearts.set(canvas, { video, size });
+                activeHeartCount++;
             };
             
             document.body.appendChild(video); // Keep video in DOM but hidden
@@ -202,6 +235,7 @@ function createFallingPhotoHearts() {
                     heartData.video.remove();
                 }
                 activeHearts.delete(canvas);
+                activeHeartCount--;
                 heart.remove();
             }
         }, (duration + 2) * 1000);
@@ -214,10 +248,12 @@ function createFallingPhotoHearts() {
         }, i * 1000);
     }
     
-    // Continue creating falling hearts continuously
+    // Continue creating falling hearts continuously (throttled for performance)
     setInterval(() => {
-        createFallingHeart();
-    }, 2000); // Create a new heart every 2 seconds for continuous effect
+        if (activeHeartCount < MAX_CONCURRENT_HEARTS) {
+            createFallingHeart();
+        }
+    }, 3000); // Increased from 2000ms to 3000ms for better performance
 }
 
 // NO button dodge logic

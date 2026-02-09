@@ -49,6 +49,8 @@ body {
     opacity: 0;
     filter: drop-shadow(0 4px 15px rgba(255, 23, 68, 0.5));
     overflow: visible;
+    will-change: transform, opacity; /* GPU acceleration */
+    transform: translateZ(0); /* Force GPU layer */
 }
 
 .photo-heart canvas {
@@ -57,6 +59,7 @@ body {
     display: block;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+    will-change: contents; /* Optimize canvas updates */
 }
 
 @keyframes fallDown {
@@ -353,6 +356,38 @@ body {
     transform: scale(0.95);
 }
 
+/* Test Button */
+.test-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #666;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #ddd;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    font-family: inherit;
+    z-index: 1000;
+    opacity: 0.7;
+}
+
+.test-button:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 1);
+    border-color: #999;
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.test-button:active {
+    transform: scale(0.95);
+}
+
 /* Mobile Responsive */
 @media (max-width: 480px) {
     .main-text {
@@ -391,6 +426,13 @@ body {
         padding: 18px 40px;
         font-size: 1.3rem;
         margin-top: 20px;
+    }
+    
+    .test-button {
+        bottom: 15px;
+        right: 15px;
+        padding: 8px 16px;
+        font-size: 0.8rem;
     }
 }
 
