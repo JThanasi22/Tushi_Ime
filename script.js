@@ -124,7 +124,7 @@ function createFallingPhotoHearts() {
 }
 
 // NO button dodge logic
-let noClickCount = 0;
+let noClickCount = -1; // Start at -1 so first click shows index 0
 const noButtonMessages = [
     'JO 🙈',
     'Je e sigurt? 🥺',
