@@ -36,10 +36,13 @@ function createCelebrationAnimation() {
     const roses = ['🌹', '🌺', '🌸'];
     
     const allItems = [...hearts, ...flowers, ...roses];
-    const animationTypes = ['celebrationFloat', 'celebrationFloatReverse', 'celebrationFloatLeft', 'celebrationFloatRight'];
+    const ANIMATION_DURATION = 5000; // 5 seconds total
     
-    // Create many items for a full-screen effect
-    for (let i = 0; i < 100; i++) {
+    // Create items for a full-screen effect within 5 seconds
+    const totalItems = 80; // Reduced for 5 second duration
+    const creationInterval = ANIMATION_DURATION / totalItems; // Spread creation over 5 seconds
+    
+    for (let i = 0; i < totalItems; i++) {
         setTimeout(() => {
             const item = document.createElement('div');
             const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
@@ -61,17 +64,18 @@ function createCelebrationAnimation() {
             item.style.setProperty('--random-y', randomY);
             
             // Random starting position
-            if (i % 4 === 0) {
+            const direction = Math.floor(Math.random() * 4);
+            if (direction === 0) {
                 // Start from bottom
                 item.style.left = Math.random() * 100 + '%';
                 item.style.bottom = '0';
                 item.style.animationName = 'celebrationFloat';
-            } else if (i % 4 === 1) {
+            } else if (direction === 1) {
                 // Start from top
                 item.style.left = Math.random() * 100 + '%';
                 item.style.top = '0';
                 item.style.animationName = 'celebrationFloatReverse';
-            } else if (i % 4 === 2) {
+            } else if (direction === 2) {
                 // Start from left
                 item.style.left = '0';
                 item.style.top = Math.random() * 100 + '%';
@@ -87,82 +91,28 @@ function createCelebrationAnimation() {
             const size = 20 + Math.random() * 40;
             item.style.fontSize = size + 'px';
             
-            // Random delay
-            item.style.animationDelay = Math.random() * 2 + 's';
-            item.style.animationDuration = (6 + Math.random() * 4) + 's';
+            // Shorter animation duration to fit 5 second window
+            item.style.animationDelay = '0s';
+            item.style.animationDuration = '5s';
             
             celebrationContainer.appendChild(item);
             
-            // Remove after animation
+            // Remove after animation completes
             setTimeout(() => {
                 if (item.parentNode) {
                     item.remove();
                 }
-            }, 12000);
-        }, i * 50); // Stagger creation
+            }, ANIMATION_DURATION);
+        }, i * creationInterval); // Stagger creation over 5 seconds
     }
     
-    // Continue creating items for a while
-    let itemCount = 100;
-    const interval = setInterval(() => {
-        if (itemCount >= 300) {
-            clearInterval(interval);
-            return;
+    // Remove entire celebration container after 5 seconds
+    setTimeout(() => {
+        if (celebrationContainer && celebrationContainer.parentNode) {
+            celebrationContainer.remove();
         }
-        
-        for (let j = 0; j < 10; j++) {
-            const item = document.createElement('div');
-            const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
-            item.textContent = randomItem;
-            
-            if (hearts.includes(randomItem)) {
-                item.className = 'celebration-item celebration-heart';
-            } else if (roses.includes(randomItem)) {
-                item.className = 'celebration-item celebration-rose';
-            } else {
-                item.className = 'celebration-item celebration-flower';
-            }
-            
-            const randomX = (Math.random() - 0.5) * 2;
-            const randomY = (Math.random() - 0.5) * 2;
-            item.style.setProperty('--random-x', randomX);
-            item.style.setProperty('--random-y', randomY);
-            
-            const direction = Math.floor(Math.random() * 4);
-            if (direction === 0) {
-                item.style.left = Math.random() * 100 + '%';
-                item.style.bottom = '0';
-                item.style.animationName = 'celebrationFloat';
-            } else if (direction === 1) {
-                item.style.left = Math.random() * 100 + '%';
-                item.style.top = '0';
-                item.style.animationName = 'celebrationFloatReverse';
-            } else if (direction === 2) {
-                item.style.left = '0';
-                item.style.top = Math.random() * 100 + '%';
-                item.style.animationName = 'celebrationFloatLeft';
-            } else {
-                item.style.right = '0';
-                item.style.top = Math.random() * 100 + '%';
-                item.style.animationName = 'celebrationFloatRight';
-            }
-            
-            const size = 20 + Math.random() * 40;
-            item.style.fontSize = size + 'px';
-            item.style.animationDelay = Math.random() * 1 + 's';
-            item.style.animationDuration = (6 + Math.random() * 4) + 's';
-            
-            celebrationContainer.appendChild(item);
-            
-            setTimeout(() => {
-                if (item.parentNode) {
-                    item.remove();
-                }
-            }, 12000);
-        }
-        
-        itemCount += 10;
-    }, 2000);
+        celebrationActive = false; // Reset flag so animation can run again if needed
+    }, ANIMATION_DURATION);
 }
 
 // Function to generate QR code
