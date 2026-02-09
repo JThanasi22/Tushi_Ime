@@ -15,6 +15,64 @@ function createHearts() {
     }
 }
 
+// Draw heart frame on canvas
+function drawHeartFrame(imageOrVideo, canvas, size) {
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    canvas.width = size;
+    canvas.height = size;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, size, size);
+    
+    // Create heart-shaped clipping path
+    ctx.save();
+    ctx.beginPath();
+    
+    // Draw heart shape (scaled to canvas size)
+    const x = size / 2;
+    const y = size * 0.375;
+    const heartSize = size * 0.5;
+    
+    ctx.moveTo(x, y + heartSize / 4);
+    
+    // Left curve
+    ctx.bezierCurveTo(
+        x, y,
+        x - heartSize / 2, y - heartSize / 2,
+        x - heartSize, y + heartSize / 4
+    );
+    
+    // Bottom left to point
+    ctx.bezierCurveTo(
+        x - heartSize, y + heartSize / 2,
+        x - heartSize / 2, y + heartSize,
+        x, y + heartSize * 1.3
+    );
+    
+    // Bottom right to point
+    ctx.bezierCurveTo(
+        x + heartSize / 2, y + heartSize,
+        x + heartSize, y + heartSize / 2,
+        x + heartSize, y + heartSize / 4
+    );
+    
+    // Right curve
+    ctx.bezierCurveTo(
+        x + heartSize / 2, y - heartSize / 2,
+        x, y,
+        x, y + heartSize / 4
+    );
+    
+    ctx.closePath();
+    ctx.clip();
+    
+    // Draw the image/video inside the clipped area
+    ctx.drawImage(imageOrVideo, 0, 0, size, size);
+    ctx.restore();
+}
+
 // Create falling photo and video hearts
 function createFallingPhotoHearts() {
     // List of images to use - all except us.jpg
@@ -45,6 +103,7 @@ function createFallingPhotoHearts() {
     if (allMedia.length === 0) return;
     
     const heartsContainer = document.querySelector('.hearts-background');
+    const activeHearts = new Map(); // Track active hearts for video rendering
     
     // Create falling heart with photo or video
     function createFallingHeart() {
@@ -55,30 +114,66 @@ function createFallingPhotoHearts() {
         const randomMedia = allMedia[Math.floor(Math.random() * allMedia.length)];
         const isVideo = randomMedia.endsWith('.mp4');
         
+        // Random size (60px to 120px)
+        const size = 60 + Math.random() * 60;
+        heart.style.width = size + 'px';
+        heart.style.height = size + 'px';
+        
+        // Create canvas element
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.display = 'block';
+        heart.appendChild(canvas);
+        
         if (isVideo) {
-            // Create video element
+            // Create video element (hidden, used for drawing)
             const video = document.createElement('video');
             video.src = randomMedia;
             video.autoplay = true;
             video.loop = true;
             video.muted = true;
             video.playsInline = true;
-            video.alt = 'Video';
+            video.style.display = 'none';
+            
             video.onerror = function() {
                 // If video fails to load, remove the heart
+                activeHearts.delete(canvas);
                 heart.remove();
             };
-            heart.appendChild(video);
+            
+            video.onloadeddata = function() {
+                // Start rendering video frames
+                function renderVideo() {
+                    if (heart.parentNode && video.readyState >= 2) {
+                        drawHeartFrame(video, canvas, size);
+                        requestAnimationFrame(renderVideo);
+                    } else {
+                        activeHearts.delete(canvas);
+                    }
+                }
+                activeHearts.set(canvas, { video, renderVideo });
+                renderVideo();
+            };
+            
+            document.body.appendChild(video); // Keep video in DOM but hidden
         } else {
             // Create image element
-            const img = document.createElement('img');
-            img.src = randomMedia;
-            img.alt = 'Photo';
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = function() {
+                drawHeartFrame(img, canvas, size);
+            };
+            
             img.onerror = function() {
                 // If image fails to load, remove the heart
                 heart.remove();
             };
-            heart.appendChild(img);
+            
+            img.src = randomMedia;
         }
         
         // Random starting position
@@ -87,11 +182,6 @@ function createFallingPhotoHearts() {
         // Random drift (horizontal movement while falling)
         const driftX = (Math.random() - 0.5) * 2; // -1 to 1
         heart.style.setProperty('--drift-x', driftX);
-        
-        // Random size (60px to 120px)
-        const size = 60 + Math.random() * 60;
-        heart.style.width = size + 'px';
-        heart.style.height = size + 'px';
         
         // Random animation duration (8 to 15 seconds)
         const duration = 8 + Math.random() * 7;
@@ -105,6 +195,13 @@ function createFallingPhotoHearts() {
         // Remove after animation completes
         setTimeout(() => {
             if (heart.parentNode) {
+                // Clean up video if it exists
+                const heartData = activeHearts.get(canvas);
+                if (heartData && heartData.video) {
+                    heartData.video.pause();
+                    heartData.video.remove();
+                }
+                activeHearts.delete(canvas);
                 heart.remove();
             }
         }, (duration + 2) * 1000);
