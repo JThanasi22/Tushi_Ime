@@ -50,11 +50,18 @@
                 </div>
             </div>
             
-            <p class="final-message" id="finalMessage"></p>
-            
-            <a href="tel:+355696441221" class="call-button" id="callButton" style="display: none;">
+            <a href="tel:+355696441221" class="call-button" id="callButton">
                 📞 Më Thirr
             </a>
+            
+            <p class="final-message" id="finalMessage"></p>
+            
+            <div class="qr-code-container" id="qrCodeContainer" style="display: none;">
+                <p class="qr-code-label">Skano QR kodin për të parë videon:</p>
+                <div class="qr-code-wrapper">
+                    <canvas id="qrCode"></canvas>
+                </div>
+            </div>
             
             <button id="testButton" class="test-button" title="Test - Skip countdown">
                 ⚡ Test
@@ -62,6 +69,7 @@
         </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="countdown.js"></script>
     <script src="script.js"></script>
 </body>

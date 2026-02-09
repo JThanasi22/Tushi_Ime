@@ -165,6 +165,57 @@ function createCelebrationAnimation() {
     }, 2000);
 }
 
+// Function to generate QR code
+function generateQRCode() {
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const qrCodeCanvas = document.getElementById('qrCode');
+    
+    if (!qrCodeContainer || !qrCodeCanvas) return;
+    
+    // YouTube URL to encode in QR code
+    const youtubeUrl = 'https://www.youtube.com/watch?v=S6nBo-vDoZ4&list=RDS6nBo-vDoZ4&start_radio=1';
+    
+    // Check if QRCode library is loaded
+    if (typeof QRCode !== 'undefined') {
+        QRCode.toCanvas(qrCodeCanvas, youtubeUrl, {
+            width: 250,
+            margin: 2,
+            color: {
+                dark: '#c2185b',
+                light: '#ffffff'
+            }
+        }, function (error) {
+            if (error) {
+                console.error('QR Code generation error:', error);
+                // Fallback to online service if canvas generation fails
+                useOnlineQRCode(qrCodeCanvas, youtubeUrl);
+            }
+        });
+    } else {
+        // Fallback: use online QR code service if library not loaded
+        useOnlineQRCode(qrCodeCanvas, youtubeUrl);
+    }
+}
+
+// Fallback function to use online QR code service
+function useOnlineQRCode(canvasElement, url) {
+    const qrCodeWrapper = canvasElement.parentElement;
+    if (!qrCodeWrapper) return;
+    
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}&color=c2185b&bgcolor=ffffff`;
+    const img = document.createElement('img');
+    img.src = qrCodeUrl;
+    img.alt = 'QR Code';
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    img.style.display = 'block';
+    img.style.margin = '0 auto';
+    img.style.borderRadius = '10px';
+    
+    // Replace canvas with img
+    qrCodeWrapper.replaceChild(img, canvasElement);
+}
+
 // Function to show countdown end state (reusable for test button)
 function showCountdownEnd() {
     const daysElement = document.getElementById('days');
@@ -176,6 +227,7 @@ function showCountdownEnd() {
     const countdownText = document.querySelector('.countdown-text');
     const callButton = document.getElementById('callButton');
     const testButton = document.getElementById('testButton');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
     
     // Set countdown to 0
     if (daysElement) daysElement.textContent = '0';
@@ -202,10 +254,16 @@ function showCountdownEnd() {
         testButton.style.display = 'none';
     }
     
-    // Show call button with animation
+    // Hide call button
     if (callButton) {
-        callButton.style.display = 'block';
-        callButton.style.animation = 'fadeIn 1s ease-in, pulse 2s infinite';
+        callButton.style.display = 'none';
+    }
+    
+    // Show QR code
+    if (qrCodeContainer) {
+        qrCodeContainer.style.display = 'block';
+        qrCodeContainer.style.animation = 'fadeIn 1s ease-in';
+        generateQRCode();
     }
     
     // Start celebration animation
